@@ -2,6 +2,10 @@ package string_sum
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
+	"regexp"
 )
 
 //use these errors as appropriate, wrapping them with fmt.Errorf function
@@ -12,16 +16,55 @@ var (
 	errorNotTwoOperands = errors.New("expecting two operands, but received more or less")
 )
 
-// Implement a function that computes the sum of two int numbers written as a string
-// For example, having an input string "3+5", it should return output string "8" and nil error
-// Consider cases, when operands are negative ("-3+5" or "-3-5") and when input string contains whitespace (" 3 + 5 ")
-//
-//For the cases, when the input expression is not valid(contains characters, that are not numbers, +, - or whitespace)
-// the function should return an empty string and an appropriate error from strconv package wrapped into your own error
-// with fmt.Errorf function
-//
-// Use the errors defined above as described, again wrapping into fmt.Errorf
-
 func StringSum(input string) (output string, err error) {
-	return "", nil
+	input = strings.ReplaceAll(input, " ", "")
+
+	nums_re := regexp.MustCompile("[0-9]+") 
+	nums := nums_re.FindAllString(input, -1)
+
+	str_re := regexp.MustCompile("[a-zA-Z]+") 
+	str := str_re.FindAllString(input, -1)
+
+	if len(str) != 0 {
+		_, err := strconv.Atoi(str[0])
+		if err != nil {
+			return "", fmt.Errorf(
+				"Error (you must use only int values): %w", err,
+			)
+		}
+	}
+	if input == "" {
+		return "", fmt.Errorf(
+			"Error (must be at least two operands): %w", errorEmptyInput,
+		)
+	}
+	if len(nums) != 2 {
+		return "", fmt.Errorf(
+			"Error (must be two operands): %w", errorNotTwoOperands,
+		)
+	}
+	
+	values := strings.Split(input, "+")
+
+	if len(values) == 1 {
+		last_index := strings.LastIndex(input, "-")
+		return compute_result([]string{input[:last_index], input[last_index:]})
+	}
+
+	return compute_result([]string{values[0], values[1]})
+}
+
+func compute_result(operands []string) (string, error) {
+
+	var result int
+
+	for _, j := range operands {
+		num, err := strconv.Atoi(j)
+		if err != nil {
+			return "", fmt.Errorf("Error: %w", err)
+		}
+		result += num
+	}
+
+	return strconv.Itoa(result), nil
 }
